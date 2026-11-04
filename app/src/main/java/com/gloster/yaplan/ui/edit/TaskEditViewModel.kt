@@ -43,6 +43,7 @@ data class TaskEditState(
     val dueTime: LocalTime = DEFAULT_TIME,
     val repeatDays: Int = 0,
     val repeatTime: LocalTime = timeOfDay(DEFAULT_REPEAT_MINUTES),
+    val reminderAlarm: Boolean = false,
     /** Items not saved yet have negative ids, so each row still has its own key. */
     val items: List<ChecklistItem> = emptyList(),
     /** What is typed in "Madde ekle"; saving keeps it even if Enter wasn't pressed. */
@@ -53,7 +54,9 @@ data class TaskEditState(
     val hasDate: Boolean get() = dueDate != null
     val repeats: Boolean get() = repeatDays != 0
 
-    fun dueAt(zone: ZoneId): Long? = dueDate?.atTime(dueTime)?.atZone(zone)?.toInstant()?.toEpochMilli()
+    /** A repeating task has no due date; [dueDate] is kept so clearing the days brings it back. */
+    fun dueAt(zone: ZoneId): Long? =
+        dueDate?.takeUnless { repeats }?.atTime(dueTime)?.atZone(zone)?.toInstant()?.toEpochMilli()
 
     companion object {
         val DEFAULT_TIME: LocalTime = LocalTime.of(18, 0)
@@ -73,6 +76,7 @@ interface TaskFormActions {
     fun setDueTime(value: LocalTime)
     fun toggleRepeatDay(day: DayOfWeek)
     fun setRepeatTime(value: LocalTime)
+    fun setReminderAlarm(value: Boolean)
     fun setNewItemText(value: String)
     fun addNewItem()
     fun setItemText(id: Long, text: String)
@@ -115,6 +119,7 @@ class TaskEditViewModel(
                     dueTime = due?.toLocalTime()?.withSecond(0)?.withNano(0) ?: TaskEditState.DEFAULT_TIME,
                     repeatDays = task.repeatDays,
                     repeatTime = task.repeatTime,
+                    reminderAlarm = task.reminderAlarm,
                     items = items,
                     createdAt = task.createdAt,
                 )
@@ -149,6 +154,7 @@ class TaskEditViewModel(
     override fun setDueTime(value: LocalTime) = _state.update { it.copy(dueTime = value) }
     override fun toggleRepeatDay(day: DayOfWeek) = _state.update { it.copy(repeatDays = it.repeatDays.toggleDay(day)) }
     override fun setRepeatTime(value: LocalTime) = _state.update { it.copy(repeatTime = value) }
+    override fun setReminderAlarm(value: Boolean) = _state.update { it.copy(reminderAlarm = value) }
 
     /** A pasted multi-line list becomes one item per line. */
     override fun setNewItemText(value: String) {
@@ -200,6 +206,7 @@ class TaskEditViewModel(
             dueAt = s.dueAt(zone),
             repeatDays = s.repeatDays,
             repeatMinutes = s.repeatTime.minuteOfDay(),
+            reminderAlarm = s.reminderAlarm,
         )
         val items = s.items
             .filter { it.text.isNotBlank() }

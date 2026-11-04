@@ -42,6 +42,7 @@ class HabitRepository(
         if (!canToggle(day, today)) return
         val check = HabitCheck(habitId, day.toEpochDay())
         if (done) habits.insertCheck(check) else habits.deleteCheck(check)
+        if (done && day == today) scheduler.stopHabitAlarm(habitId)
         onChanged()
     }
 

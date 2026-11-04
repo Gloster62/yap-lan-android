@@ -249,7 +249,7 @@ private fun Header(state: TaskListUiState) {
     ) {
         Text(
             buildAnnotatedString {
-                append("YAPARSIN")
+                append("YAP LAN")
                 withStyle(SpanStyle(color = Yap.Accent)) { append("!") }
             },
             modifier = Modifier
@@ -471,7 +471,7 @@ private fun FirstRunEmpty(onAddTask: () -> Unit, modifier: Modifier = Modifier) 
         Icon(Icons.Outlined.CheckBox, contentDescription = null, tint = Yap.EmptyIcon, modifier = Modifier.size(56.dp))
         Text("Henüz görev yok", fontSize = 20.sp, lineHeight = 26.sp, fontWeight = FontWeight.SemiBold)
         Text(
-            "İlk görevini ekle, zamanı gelince YAPARSIN! sana hatırlatsın.",
+            "İlk görevini ekle, zamanı gelince YAP LAN! sana hatırlatsın.",
             fontSize = 15.sp,
             lineHeight = 22.sp,
             color = Yap.TextMuted,

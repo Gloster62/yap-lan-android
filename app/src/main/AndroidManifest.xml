@@ -29,7 +29,7 @@
         </activity>
 
         <activity
-            android:name=".ui.alarm.ChainAlarmActivity"
+            android:name=".ui.alarm.AlarmActivity"
             android:excludeFromRecents="true"
             android:exported="false"
             android:launchMode="singleTask"

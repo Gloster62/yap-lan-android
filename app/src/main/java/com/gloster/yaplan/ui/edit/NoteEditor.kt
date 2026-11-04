@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -53,11 +54,12 @@ import com.gloster.yaplan.ui.theme.PlexMono
 import com.gloster.yaplan.ui.theme.Yap
 
 /**
- * "Liste": tickable lines under a task, e.g. a shopping list. Typing in the last row and pressing
- * Enter adds a line and keeps the keyboard open for the next one.
+ * "Not": free text and tickable lines (e.g. a shopping list) in one box. Typing in the last row and
+ * pressing Enter adds a line and keeps the keyboard open for the next one.
  */
 @Composable
-fun ChecklistEditor(
+fun NoteEditor(
+    note: String,
     items: List<ChecklistItem>,
     newItemText: String,
     actions: TaskFormActions,
@@ -70,7 +72,7 @@ fun ChecklistEditor(
 
     Column(modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            FieldLabel("Liste")
+            FieldLabel("Not")
             Text(
                 " (isteğe bağlı)",
                 modifier = Modifier.weight(1f),
@@ -97,6 +99,19 @@ fun ChecklistEditor(
                 .border(1.dp, Yap.OutlineStrong, shape)
                 .padding(vertical = 2.dp),
         ) {
+            ItemTextField(
+                value = note,
+                onValueChange = actions::setNote,
+                placeholder = "Ayrıntı ekle",
+                imeAction = ImeAction.Default,
+                onIme = {},
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .semantics { contentDescription = "Not" },
+                minLines = 2,
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
+            )
+            HorizontalDivider(color = Yap.Divider)
             items.forEach { item ->
                 key(item.id) {
                     ItemRow(
@@ -193,12 +208,15 @@ private fun ItemTextField(
     onIme: () -> Unit,
     modifier: Modifier = Modifier,
     done: Boolean = false,
+    minLines: Int = 1,
+    contentPadding: PaddingValues = PaddingValues(),
 ) {
     BasicTextField(
         value = value,
         onValueChange = onValueChange,
         modifier = modifier,
-        singleLine = true,
+        singleLine = minLines == 1,
+        minLines = minLines,
         textStyle = MaterialTheme.typography.bodyLarge.copy(
             fontSize = 15.sp,
             color = if (done) Yap.TextFaint else Yap.Text,
@@ -208,7 +226,7 @@ private fun ItemTextField(
         keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = imeAction),
         keyboardActions = KeyboardActions(onDone = { onIme() }, onNext = { onIme() }),
         decorationBox = { inner ->
-            Box(contentAlignment = Alignment.CenterStart) {
+            Box(Modifier.padding(contentPadding)) {
                 if (value.isEmpty()) {
                     Text(placeholder, fontSize = 15.sp, color = Yap.TextFaint)
                 }

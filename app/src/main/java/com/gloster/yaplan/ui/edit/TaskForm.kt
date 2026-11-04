@@ -65,6 +65,7 @@ import com.gloster.yaplan.ui.components.ChoiceChip
 import com.gloster.yaplan.ui.components.FieldLabel
 import com.gloster.yaplan.ui.components.LabeledTextField
 import com.gloster.yaplan.ui.components.PriorityBars
+import com.gloster.yaplan.ui.components.ReminderStyle
 import com.gloster.yaplan.ui.components.SelectableBox
 import com.gloster.yaplan.ui.dayLabel
 import com.gloster.yaplan.ui.dayName
@@ -132,17 +133,8 @@ fun TaskForm(
             isError = !state.isNew && !state.canSave,
             errorText = "Başlık boş olamaz.",
         )
-        LabeledTextField(
-            label = "Not",
-            labelHint = "(isteğe bağlı)",
-            value = state.note,
-            onValueChange = actions::setNote,
-            placeholder = "Ayrıntı ekle",
-            singleLine = false,
-            minLines = 2,
-            containerColor = fieldColor,
-        )
-        ChecklistEditor(
+        NoteEditor(
+            note = state.note,
             items = state.items,
             newItemText = state.newItemText,
             actions = actions,
@@ -181,30 +173,32 @@ fun TaskForm(
             }
         }
 
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            FieldLabel("Son tarih")
-            val date = state.dueDate
-            val isOther = date != null && date != today && date != today.plusDays(1)
-            Row(Modifier.selectableGroup(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                DateOption("Yok", date == null) { setDueDate(null) }
-                DateOption("Bugün", date == today) { setDueDate(today) }
-                DateOption("Yarın", date == today.plusDays(1)) { setDueDate(today.plusDays(1)) }
-                DateOption(if (isOther) formatShortDate(date) else "Başka gün", isOther) { showDatePicker = true }
-            }
-        }
-
-        if (state.hasDate) {
+        if (!state.repeats) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                FieldLabel("Saat")
-                TimeChoices(state.dueTime, onPreset = actions::setDueTime, onOther = { timePickerFor = TimeTarget.DUE })
-                val dueAt = state.dueAt(ZoneId.systemDefault())
-                FormHint(
-                    if (dueAt != null && dueAt <= System.currentTimeMillis()) {
-                        "Bu saat geçti, bildirim gelmeyecek."
-                    } else {
-                        "Bildirim: ${dayLabel(state.dueDate!!, today)} ${formatTime(state.dueTime)}"
-                    },
-                )
+                FieldLabel("Son tarih")
+                val date = state.dueDate
+                val isOther = date != null && date != today && date != today.plusDays(1)
+                Row(Modifier.selectableGroup(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    DateOption("Yok", date == null) { setDueDate(null) }
+                    DateOption("Bugün", date == today) { setDueDate(today) }
+                    DateOption("Yarın", date == today.plusDays(1)) { setDueDate(today.plusDays(1)) }
+                    DateOption(if (isOther) formatShortDate(date) else "Başka gün", isOther) { showDatePicker = true }
+                }
+            }
+
+            if (state.hasDate) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FieldLabel("Saat")
+                    TimeChoices(state.dueTime, onPreset = actions::setDueTime, onOther = { timePickerFor = TimeTarget.DUE })
+                    val dueAt = state.dueAt(ZoneId.systemDefault())
+                    FormHint(
+                        if (dueAt != null && dueAt <= System.currentTimeMillis()) {
+                            "Bu saat geçti, hatırlatma gelmeyecek."
+                        } else {
+                            "${if (state.reminderAlarm) "Alarm" else "Bildirim"}: ${dayLabel(state.dueDate!!, today)} ${formatTime(state.dueTime)}"
+                        },
+                    )
+                }
             }
         }
 
@@ -217,6 +211,10 @@ fun TaskForm(
             onPresetTime = actions::setRepeatTime,
             onOtherTime = { timePickerFor = TimeTarget.REPEAT },
         )
+
+        if (state.hasDate || state.repeats) {
+            ReminderStyle(alarm = state.reminderAlarm, onChange = actions::setReminderAlarm)
+        }
     }
 
     if (showDatePicker) {
@@ -426,7 +424,7 @@ private fun RepeatPicker(
             FormHint("${formatRepeat(state.repeatDays, state.repeatTime)} · görevi bitirince durur")
         } else {
             Text(
-                "Seçtiğin günlerde bildirim gelir. Ör. her Pazartesi ve Perşembe.",
+                "Seçtiğin günlerde hatırlatma gelir. Ör. her Pazartesi ve Perşembe.",
                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
                 color = Yap.TextFaint,
             )

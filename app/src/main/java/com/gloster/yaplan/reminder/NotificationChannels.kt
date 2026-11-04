@@ -17,27 +17,31 @@ object NotificationChannels {
     const val HABITS = "habit_reminders"
     const val CHAIN_SAVER = "chain_saver"
     const val CHAIN_ALARM = "chain_alarm"
+    const val TASK_ALARM = "task_alarm"
 
     fun create(context: Context) {
-        val alarmSound = AudioAttributes.Builder()
-            .setUsage(AudioAttributes.USAGE_ALARM)
-            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-            .build()
         val channels = listOf(
             channel(TASKS, "Görev hatırlatmaları", "Son tarihi gelen görevler"),
             channel(REPEAT, "Düzenli hatırlatmalar", "Seçtiğin günlerde gelen görev hatırlatmaları"),
             channel(HABITS, "Alışkanlık hatırlatmaları", "Alışkanlığın günlük hatırlatması"),
             channel(CHAIN_SAVER, "Zincir kurtarıcı", "Gece yarısı kırılacak zincirler için akşam uyarısı"),
-            channel(CHAIN_ALARM, "Zincir alarmı", "Alarm olarak seçilen alışkanlık hatırlatmaları").apply {
-                setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM), alarmSound)
-                enableVibration(true)
-            },
+            alarmChannel(CHAIN_ALARM, "Zincir alarmı", "Alarm olarak seçilen alışkanlık hatırlatmaları"),
+            alarmChannel(TASK_ALARM, "Görev alarmı", "Alarm olarak seçilen görev hatırlatmaları"),
         )
         context.getSystemService(NotificationManager::class.java).createNotificationChannels(channels)
     }
 
     private fun channel(id: String, name: String, description: String) =
         NotificationChannel(id, name, NotificationManager.IMPORTANCE_HIGH).apply { this.description = description }
+
+    private fun alarmChannel(id: String, name: String, description: String) = channel(id, name, description).apply {
+        val alarmSound = AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_ALARM)
+            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .build()
+        setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM), alarmSound)
+        enableVibration(true)
+    }
 }
 
 fun canNotify(context: Context): Boolean =

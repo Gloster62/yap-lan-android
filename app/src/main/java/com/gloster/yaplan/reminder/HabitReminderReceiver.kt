@@ -30,7 +30,7 @@ class HabitReminderReceiver : BroadcastReceiver() {
                 val today = LocalDate.now()
                 if (today in done || !canNotify(context)) return@launch
                 val streak = currentStreak(done, today)
-                if (habit.reminderAlarm) ChainAlarm.ring(context, habit, streak) else notify(context, habit, streak)
+                if (habit.reminderAlarm) Alarm.ringHabit(context, habit, streak) else notify(context, habit, streak)
             } finally {
                 pending.finish()
             }

@@ -1,5 +1,6 @@
 package com.gloster.yaplan.ui
 
+import com.gloster.yaplan.data.ChecklistItem
 import com.gloster.yaplan.data.EVERY_DAY
 import com.gloster.yaplan.data.WEEKDAYS
 import com.gloster.yaplan.data.WEEKEND
@@ -86,6 +87,11 @@ fun compactDueLabel(dueAt: Long, today: LocalDate, zone: ZoneId = ZoneId.systemD
     val due = dueAt.toLocalDateTime(zone)
     return if (due.toLocalDate() == today) due.format(timeFormat) else dayLabel(due.toLocalDate(), today)
 }
+
+/** "2 madde kaldı: Süt, Ekmek"; null when nothing is left. */
+fun itemsLeftLabel(items: List<ChecklistItem>): String? =
+    items.filterNot { it.isDone }.takeIf { it.isNotEmpty() }
+        ?.let { left -> "${left.size} madde kaldı: ${left.joinToString(", ") { it.text }}" }
 
 /** "2 sa 15 dk", "45 dk" */
 fun formatDuration(millis: Long): String {

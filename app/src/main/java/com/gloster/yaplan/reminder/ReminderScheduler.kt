@@ -31,6 +31,7 @@ class ReminderScheduler(private val context: Context) {
         if (task.isDone) {
             alarmManager.cancel(snoozeIntent(task.id))
             cancelFollowUp(task.id)
+            Alarm.stopTask(context, task.id)
         }
     }
 
@@ -39,6 +40,7 @@ class ReminderScheduler(private val context: Context) {
         alarmManager.cancel(repeatIntent(taskId))
         alarmManager.cancel(snoozeIntent(taskId))
         cancelFollowUp(taskId)
+        Alarm.stopTask(context, taskId)
     }
 
     fun snooze(taskId: Long, at: Long) {
@@ -67,6 +69,11 @@ class ReminderScheduler(private val context: Context) {
     fun cancelHabit(habitId: Long) {
         alarmManager.cancel(habitIntent(habitId))
         alarmManager.cancel(habitIntent(habitId, HabitReminderReceiver.ACTION_SNOOZE))
+        stopHabitAlarm(habitId)
+    }
+
+    fun stopHabitAlarm(habitId: Long) {
+        Alarm.stopHabit(context, habitId)
     }
 
     /** One evening check for every chain; the receiver decides whether any is at risk. */

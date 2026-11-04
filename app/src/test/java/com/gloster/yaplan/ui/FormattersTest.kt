@@ -1,5 +1,6 @@
 package com.gloster.yaplan.ui
 
+import com.gloster.yaplan.data.ChecklistItem
 import com.gloster.yaplan.data.EVERY_DAY
 import com.gloster.yaplan.data.WEEKDAYS
 import com.gloster.yaplan.data.WEEKEND
@@ -9,6 +10,7 @@ import java.time.LocalTime
 import java.time.YearMonth
 import java.time.ZoneOffset
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 class FormattersTest {
@@ -57,6 +59,16 @@ class FormattersTest {
         assertEquals("18:00", compactDueLabel(at(19, 18), today, ZoneOffset.UTC))
         assertEquals("Yarın", compactDueLabel(at(20, 9), today, ZoneOffset.UTC))
         assertEquals("Dün", compactDueLabel(at(18, 9), today, ZoneOffset.UTC))
+    }
+
+    @Test
+    fun itemsLeftNamesOnlyWhatIsNotDone() {
+        val milk = ChecklistItem(taskId = 1, text = "Süt")
+        val bread = ChecklistItem(taskId = 1, text = "Ekmek")
+        val eggs = ChecklistItem(taskId = 1, text = "Yumurta", isDone = true)
+        assertEquals("2 madde kaldı: Süt, Ekmek", itemsLeftLabel(listOf(milk, eggs, bread)))
+        assertNull(itemsLeftLabel(listOf(eggs)))
+        assertNull(itemsLeftLabel(emptyList()))
     }
 
     @Test

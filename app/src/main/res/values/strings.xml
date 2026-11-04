@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">YAPARSIN!</string>
+    <string name="app_name">YAP LAN!</string>
     <string name="habit_widget_label">Alışkanlık takvimi</string>
     <string name="habit_widget_description">Bir alışkanlığın bu ayki zinciri</string>
     <string name="task_widget_label">Görev</string>

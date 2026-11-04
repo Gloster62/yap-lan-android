@@ -11,6 +11,7 @@ import com.gloster.yaplan.R
 import com.gloster.yaplan.YapLanApp
 import com.gloster.yaplan.data.ChecklistItem
 import com.gloster.yaplan.data.Task
+import com.gloster.yaplan.ui.itemsLeftLabel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -29,13 +30,14 @@ class ReminderReceiver : BroadcastReceiver() {
                 val items = app.repository.getItems(taskId)
                 if (intent.action == ACTION_FOLLOW_UP) {
                     // Tapped, ticked, snoozed or swiped away means it was seen; only an ignored one gets a second nudge.
-                    if (isNotificationShowing(context, task.id.toInt())) {
+                    // A timed-out alarm no longer shows, but every answer to an alarm cancels this follow-up.
+                    if (task.reminderAlarm || isNotificationShowing(context, task.id.toInt())) {
                         notify(context, task, items, intent.getStringExtra(EXTRA_CHANNEL) ?: NotificationChannels.TASKS, followUp = true)
                     }
                     return@launch
                 }
                 val channel = if (intent.action == ACTION_REPEAT) NotificationChannels.REPEAT else NotificationChannels.TASKS
-                notify(context, task, items, channel, followUp = false)
+                if (task.reminderAlarm) Alarm.ringTask(context, task, items) else notify(context, task, items, channel, followUp = false)
                 app.scheduler.followUp(task.id, channel)
             } finally {
                 pending.finish()
@@ -50,10 +52,9 @@ class ReminderReceiver : BroadcastReceiver() {
             DeepLinks.intent(context, DeepLinks.task(task.id)),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
-        val left = items.filterNot { it.isDone }
-        val builder = NotificationCompat.Builder(context, channel)
+        val notification = NotificationCompat.Builder(context, channel)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle(if (followUp) "Hâlâ bekliyor" else "YAPARSIN!")
+            .setContentTitle(if (followUp) "Hâlâ bekliyor" else "YAP LAN!")
             .setContentText(task.title)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
@@ -61,13 +62,9 @@ class ReminderReceiver : BroadcastReceiver() {
             .setAutoCancel(true)
             .addAction(0, "Tamamlandı", NotificationActionReceiver.taskDone(context, task.id))
             .addAction(0, "10 dk ertele", NotificationActionReceiver.taskSnooze(context, task.id))
-        if (left.isNotEmpty()) {
-            builder.setStyle(
-                NotificationCompat.BigTextStyle()
-                    .bigText("${task.title}\n${left.size} madde kaldı: ${left.joinToString(", ") { it.text }}"),
-            )
-        }
-        NotificationManagerCompat.from(context).notify(task.id.toInt(), builder.build())
+            .withItemsLeft(task, items)
+            .build()
+        NotificationManagerCompat.from(context).notify(task.id.toInt(), notification)
     }
 
     companion object {
@@ -76,5 +73,10 @@ class ReminderReceiver : BroadcastReceiver() {
         const val ACTION_REPEAT = "com.gloster.yaplan.REPEAT_REMINDER"
         const val ACTION_SNOOZE = "com.gloster.yaplan.SNOOZED_REMINDER"
         const val ACTION_FOLLOW_UP = "com.gloster.yaplan.FOLLOW_UP_REMINDER"
+
+        /** Expanding the notification shows what is left of the list. */
+        fun NotificationCompat.Builder.withItemsLeft(task: Task, items: List<ChecklistItem>) = apply {
+            itemsLeftLabel(items)?.let { setStyle(NotificationCompat.BigTextStyle().bigText("${task.title}\n$it")) }
+        }
     }
 }

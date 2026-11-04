@@ -11,7 +11,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 /** What to tell the user when the launcher can't place a widget for us. */
-const val ADD_WIDGET_BY_HAND = "Ana ekrana uzun bas → Widget'lar → YAPARSIN! yolunu kullan."
+const val ADD_WIDGET_BY_HAND = "Ana ekrana uzun bas → Widget'lar → YAP LAN! yolunu kullan."
 
 /**
  * Asks the launcher to place a calendar widget for [habitId]. False when the launcher can't pin

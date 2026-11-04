@@ -30,6 +30,10 @@ class NotificationActionReceiver : BroadcastReceiver() {
                         notifications.cancel(id.toInt())
                         app.scheduler.snooze(id, System.currentTimeMillis() + ReminderScheduler.SNOOZE_MILLIS)
                     }
+                    ACTION_TASK_DISMISS -> {
+                        notifications.cancel(id.toInt())
+                        app.scheduler.cancelFollowUp(id)
+                    }
                     ACTION_HABIT_DONE -> {
                         notifications.cancel(HABIT_TAG, id.toInt())
                         app.habits.setDone(id, LocalDate.now(), true)
@@ -53,12 +57,14 @@ class NotificationActionReceiver : BroadcastReceiver() {
         private const val EXTRA_ID = "id"
         private const val ACTION_TASK_DONE = "com.gloster.yaplan.TASK_DONE"
         private const val ACTION_TASK_SNOOZE = "com.gloster.yaplan.TASK_SNOOZE"
+        private const val ACTION_TASK_DISMISS = "com.gloster.yaplan.TASK_DISMISS"
         private const val ACTION_HABIT_DONE = "com.gloster.yaplan.HABIT_DONE"
         private const val ACTION_HABIT_SNOOZE = "com.gloster.yaplan.HABIT_SNOOZE"
         private const val ACTION_HABIT_DISMISS = "com.gloster.yaplan.HABIT_DISMISS"
 
         fun taskDone(context: Context, taskId: Long) = pending(context, ACTION_TASK_DONE, taskId)
         fun taskSnooze(context: Context, taskId: Long) = pending(context, ACTION_TASK_SNOOZE, taskId)
+        fun taskDismiss(context: Context, taskId: Long) = pending(context, ACTION_TASK_DISMISS, taskId)
         fun habitDone(context: Context, habitId: Long) = pending(context, ACTION_HABIT_DONE, habitId)
         fun habitSnooze(context: Context, habitId: Long) = pending(context, ACTION_HABIT_SNOOZE, habitId)
         fun habitDismiss(context: Context, habitId: Long) = pending(context, ACTION_HABIT_DISMISS, habitId)

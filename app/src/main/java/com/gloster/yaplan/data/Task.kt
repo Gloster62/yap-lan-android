@@ -1,5 +1,6 @@
 package com.gloster.yaplan.data
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
@@ -37,6 +38,8 @@ data class Task(
     val repeatDays: Int = 0,
     /** Düzenli hatırlatmanın saati, günün dakikası (09:00 → 540). */
     val repeatMinutes: Int = DEFAULT_REPEAT_MINUTES,
+    /** Hatırlatma bildirim yerine tam ekran alarm olarak çalar. */
+    @ColumnInfo(defaultValue = "0") val reminderAlarm: Boolean = false,
     val createdAt: Long = System.currentTimeMillis(),
 )
 
